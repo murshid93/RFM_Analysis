@@ -54,13 +54,13 @@ def perform_rfm_analysis(data):
 
     # Categorize customers based on RFM score
     conditions = [
-        (rfm['RFM_Score_int'] >= 9),
-        (rfm['RFM_Score_int'] >= 7) & (rfm['RFM_Score_int'] < 9),
-        (rfm['RFM_Score_int'] >= 5) & (rfm['RFM_Score_int'] < 7),
-        (rfm['RFM_Score_int'] < 5)
+        (rfm['RFM_Score_int'] >= 400),  # Loyal Customers
+        (rfm['RFM_Score_int'] >= 300) & (rfm['RFM_Score_int'] < 400),  # Potential Loyalists
+        (rfm['RFM_Score_int'] >= 200) & (rfm['RFM_Score_int'] < 300),  # At-Risk Customers
+        (rfm['RFM_Score_int'] < 200)  # Lost Customers
     ]
     categories = ['Loyal Customers', 'Potential Loyalists', 'At-Risk Customers', 'Lost Customers']
-    rfm['Category'] = pd.cut(rfm['RFM_Score_int'], bins=[0, 5, 7, 9, 10], labels=categories, include_lowest=True)
+    rfm['Category'] = pd.cut(rfm['RFM_Score_int'], bins=[0, 199, 299, 399, 444], labels=categories, include_lowest=True)
 
     return rfm
 
