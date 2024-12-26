@@ -45,18 +45,22 @@ def perform_rfm_analysis(data):
     rfm['R_Score'] = pd.qcut(rfm['Recency'], 4, labels=[4, 3, 2, 1])
     rfm['F_Score'] = pd.qcut(rfm['Frequency'], 4, labels=[1, 2, 3, 4])
     rfm['M_Score'] = pd.qcut(rfm['Monetary'], 4, labels=[1, 2, 3, 4])
+
+    # Combine the scores into a single RFM score
     rfm['RFM_Score'] = rfm['R_Score'].astype(str) + rfm['F_Score'].astype(str) + rfm['M_Score'].astype(str)
+
+    # Convert the RFM_Score to integers for categorization
+    rfm['RFM_Score_int'] = rfm['RFM_Score'].apply(lambda x: int(x))
 
     # Categorize customers based on RFM score
     conditions = [
-        (rfm['RFM_Score'].astype(int) >= 9),
-        (rfm['RFM_Score'].astype(int) >= 7) & (rfm['RFM_Score'].astype(int) < 9),
-        (rfm['RFM_Score'].astype(int) >= 5) & (rfm['RFM_Score'].astype(int) < 7),
-        (rfm['RFM_Score'].astype(int) < 5)
+        (rfm['RFM_Score_int'] >= 9),
+        (rfm['RFM_Score_int'] >= 7) & (rfm['RFM_Score_int'] < 9),
+        (rfm['RFM_Score_int'] >= 5) & (rfm['RFM_Score_int'] < 7),
+        (rfm['RFM_Score_int'] < 5)
     ]
     categories = ['Loyal Customers', 'Potential Loyalists', 'At-Risk Customers', 'Lost Customers']
-    rfm['Category'] = pd.cut(rfm['RFM_Score'].astype(int), bins=[0, 5, 7, 9, 10], labels=categories,
-                             include_lowest=True)
+    rfm['Category'] = pd.cut(rfm['RFM_Score_int'], bins=[0, 5, 7, 9, 10], labels=categories, include_lowest=True)
 
     return rfm
 
