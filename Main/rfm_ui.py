@@ -42,7 +42,7 @@ def perform_rfm_analysis(data):
     rfm = rfm.merge(branch_route_details, on='Customer', how='left')
 
     # Assign RFM scores
-    rfm['R_Score'] = pd.qcut(rfm['Recency'], 4, labels=[4, 3, 2, 1])
+    rfm['R_Score'] = pd.qcut(rfm['Recency'], 4, labels=[1, 2, 3, 4])
     rfm['F_Score'] = pd.qcut(rfm['Frequency'], 4, labels=[1, 2, 3, 4])
     rfm['M_Score'] = pd.qcut(rfm['Monetary'], 4, labels=[1, 2, 3, 4])
 
@@ -60,70 +60,58 @@ def perform_rfm_analysis(data):
         (rfm['RFM_Score_int'] < 200)  # Lost Customers
     ]
     categories = ['Loyal Customers', 'Potential Loyalists', 'At-Risk Customers', 'Lost Customers']
+    categories = ['Lost Customer','At-Risk Customers','Potential Loyalists','Loyal Customer']
     rfm['Category'] = pd.cut(rfm['RFM_Score_int'], bins=[0, 199, 299, 399, 444], labels=categories, include_lowest=True)
 
     return rfm
 
 
 # Streamlit UI
-st.title("RFM Analysis Tool")
-st.write("Upload your dataset to perform RFM Analysis.")
+st.title("Analysis Tool")
+st.write("Upload your dataset and select the analysis you want to perform.")
+
+# Sidebar with buttons for analysis
+st.sidebar.title("Select Analysis")
+analysis_option = st.sidebar.radio("Choose an analysis to perform", ["None", "RFM Analysis"])
 
 # File uploader
 uploaded_file = st.file_uploader("Upload an Excel file", type=["xlsx"])
+
 if uploaded_file:
     try:
         # Read the uploaded file
         data = pd.read_excel(uploaded_file)
 
-        # Perform RFM Analysis
-        rfm_result = perform_rfm_analysis(data)
+        # Perform RFM Analysis if the button is clicked
+        if analysis_option == "RFM Analysis":
+            # Perform RFM Analysis
+            rfm_result = perform_rfm_analysis(data)
 
-        st.sidebar.title("Customize Analysis")
-
-        # Display the results
-        st.subheader("RFM Analysis Results")
-        st.dataframe(rfm_result)
-
-        # Visualization
-        st.subheader("RFM Segmentation Distribution")
-        fig, ax = plt.subplots()
-        rfm_result['RFM_Score'].value_counts().plot(kind='bar', ax=ax)
-        ax.set_title("RFM Segmentation")
-        ax.set_xlabel("RFM Score")
-        ax.set_ylabel("Count")
-        st.pyplot(fig)
-
-        # Download button for results
-        output = BytesIO()
-        with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            rfm_result.to_excel(writer, index=True, sheet_name='RFM Results')
-        st.download_button(
-            label="Download RFM Results as Excel",
-            data=output.getvalue(),
-            file_name="rfm_results.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
-
-        # Customer insights dashboard
-        st.subheader("Customer Insights Dashboard")
-
-        # Filter by customer name
-        customer_name = st.text_input("Enter customer name (partial or full):")
-        if customer_name:
-            filtered_customers = rfm_result[rfm_result['Customer'].str.contains(customer_name, case=False, na=False)]
-            st.write(f"Showing results for customers matching: **{customer_name}**")
-            st.dataframe(filtered_customers)
-        else:
-            st.write("Showing all customers")
+            # Display the results
+            st.subheader("RFM Analysis Results")
             st.dataframe(rfm_result)
 
-        # Filter by category
-        category = st.selectbox("Select a customer category:", options=rfm_result['Category'].unique())
-        if category:
-            category_filtered = rfm_result[rfm_result['Category'] == category]
-            st.write(f"Showing results for category: **{category}**")
-            st.dataframe(category_filtered)
+            # Visualization
+            st.subheader("RFM Segmentation Distribution")
+            fig, ax = plt.subplots()
+            rfm_result['RFM_Score'].value_counts().plot(kind='bar', ax=ax)
+            ax.set_title("RFM Segmentation")
+            ax.set_xlabel("RFM Score")
+            ax.set_ylabel("Count")
+            st.pyplot(fig)
+
+            # Download button for results
+            output = BytesIO()
+            with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                rfm_result.to_excel(writer, index=True, sheet_name='RFM Results')
+            st.download_button(
+                label="Download RFM Results as Excel",
+                data=output.getvalue(),
+                file_name="rfm_results.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+
+        # Other analysis options can be added here later
 
     except Exception as e:
         st.error(f"An error occurred: {e}")
