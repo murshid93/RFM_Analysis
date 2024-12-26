@@ -3,12 +3,7 @@ import pandas as pd
 from io import BytesIO
 from datetime import datetime
 import matplotlib.pyplot as plt
-
-
-# Function to perform RFM Analysis
-import pandas as pd
 import numpy as np
-from datetime import datetime
 
 # Function to perform RFM Analysis
 def perform_rfm_analysis(data):
@@ -62,7 +57,6 @@ def perform_rfm_analysis(data):
 
     return rfm
 
-
 # Streamlit UI
 st.title("Analysis Tool")
 st.write("Upload your dataset and select the analysis you want to perform.")
@@ -107,6 +101,37 @@ if uploaded_file:
                 file_name="rfm_results.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
+
+            # Add a selectbox to choose a customer for detailed analysis
+            customer_names = rfm_result.index.tolist()
+            selected_customer = st.selectbox("Select a customer to view details", customer_names)
+
+            if selected_customer:
+                st.write(f"Selected Customer: {selected_customer}")
+                st.write(rfm_result.loc[selected_customer])
+
+                # Show customer details when a customer is selected
+                st.subheader("Customer's Transaction Details")
+                customer_data = data[data['Customer'] == selected_customer]
+                st.dataframe(customer_data)
+
+                # Show additional charts for the customer
+                st.subheader("Customer's Purchase Trend")
+                fig, ax = plt.subplots()
+                customer_data.groupby('Date of Purchase').size().plot(kind='line', ax=ax)
+                ax.set_title(f"Purchase Trend for {selected_customer}")
+                ax.set_xlabel("Date of Purchase")
+                ax.set_ylabel("Number of Purchases")
+                st.pyplot(fig)
+
+                # Show customer's monetary value chart
+                st.subheader("Customer's Purchase Monetary Value")
+                fig, ax = plt.subplots()
+                customer_data.groupby('Date of Purchase')['Branch'].sum().plot(kind='line', ax=ax)
+                ax.set_title(f"Monetary Value Trend for {selected_customer}")
+                ax.set_xlabel("Date of Purchase")
+                ax.set_ylabel("Monetary Value")
+                st.pyplot(fig)
 
         # Other analysis options can be added here later
 
